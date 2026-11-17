@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+from pathlib import Path
 from typing import List, Optional
 
 
@@ -72,9 +74,15 @@ def leer_mes_anio(mensaje: str) -> tuple[int, int]:
 class Videoclub:
     _contador = 1
 
-    def __init__(self, gerente: str, ciudad: str, calle: str, codigo_postal: str):
-        self.__codigo = Videoclub._contador
-        Videoclub._contador += 1
+    def __init__(self, gerente: str, ciudad: str, calle: str, codigo_postal: str,
+                 codigo: Optional[int] = None):
+        if codigo is None:
+            self.__codigo = Videoclub._contador
+            Videoclub._contador += 1
+        else:
+            self.__codigo = codigo
+            Videoclub._contador = max(Videoclub._contador, codigo + 1)
+
         self.gerente = gerente
         self.ciudad = ciudad
         self.calle = calle
@@ -84,6 +92,15 @@ class Videoclub:
     def codigo(self) -> int:
         return self.__codigo
 
+    def to_dict(self) -> dict:
+        return {
+            "codigo": self.codigo,
+            "gerente": self.gerente,
+            "ciudad": self.ciudad,
+            "calle": self.calle,
+            "codigo_postal": self.codigo_postal,
+        }
+
     def __str__(self) -> str:
         return f"[VC-{self.codigo}] {self.ciudad} - C/ {self.calle} ({self.codigo_postal}) | Gerente: {self.gerente}"
 
@@ -92,9 +109,15 @@ class Pelicula:
     _contador = 1
 
     def __init__(self, nombre: str, fecha_estreno: datetime, precio_alquiler: float,
-                 videoclub: Videoclub, director: Optional[str] = None):
-        self.__codigo = Pelicula._contador
-        Pelicula._contador += 1
+                 videoclub: Videoclub, director: Optional[str] = None,
+                 codigo: Optional[int] = None):
+        if codigo is None:
+            self.__codigo = Pelicula._contador
+            Pelicula._contador += 1
+        else:
+            self.__codigo = codigo
+            Pelicula._contador = max(Pelicula._contador, codigo + 1)
+
         self.nombre = nombre
         self.director = director
         self.fecha_estreno = fecha_estreno
@@ -104,6 +127,16 @@ class Pelicula:
     @property
     def codigo(self) -> int:
         return self.__codigo
+
+    def to_dict(self) -> dict:
+        return {
+            "codigo": self.codigo,
+            "nombre": self.nombre,
+            "director": self.director,
+            "fecha_estreno": self.fecha_estreno.strftime("%d/%m/%Y"),
+            "precio_alquiler": self.precio_alquiler,
+            "videoclub_codigo": self.videoclub.codigo,
+        }
 
     def __str__(self) -> str:
         dir_str = self.director if self.director else "No especificado"
@@ -116,15 +149,27 @@ class Pelicula:
 class Socio:
     _contador = 1
 
-    def __init__(self, nombre: str, edad: int):
-        self.__codigo = Socio._contador
-        Socio._contador += 1
+    def __init__(self, nombre: str, edad: int, codigo: Optional[int] = None):
+        if codigo is None:
+            self.__codigo = Socio._contador
+            Socio._contador += 1
+        else:
+            self.__codigo = codigo
+            Socio._contador = max(Socio._contador, codigo + 1)
+
         self.nombre = nombre
         self.edad = edad
 
     @property
     def codigo(self) -> int:
         return self.__codigo
+
+    def to_dict(self) -> dict:
+        return {
+            "codigo": self.codigo,
+            "nombre": self.nombre,
+            "edad": self.edad,
+        }
 
     def __str__(self) -> str:
         return f"[SOC-{self.codigo}] {self.nombre} ({self.edad} años)"
@@ -134,9 +179,15 @@ class Alquiler:
     _contador = 1
 
     def __init__(self, socio: Socio, peliculas: List[Pelicula],
-                 fecha_recogida: datetime, fecha_devolucion: datetime):
-        self.__codigo = Alquiler._contador
-        Alquiler._contador += 1
+                 fecha_recogida: datetime, fecha_devolucion: datetime,
+                 codigo: Optional[int] = None):
+        if codigo is None:
+            self.__codigo = Alquiler._contador
+            Alquiler._contador += 1
+        else:
+            self.__codigo = codigo
+            Alquiler._contador = max(Alquiler._contador, codigo + 1)
+
         self.socio = socio
         self.peliculas = peliculas
         # Fecha de recogida obligatoria y NO editable
@@ -168,6 +219,15 @@ class Alquiler:
         """Atributo derivado: suma de los precios de las películas del alquiler."""
         return round(sum(p.precio_alquiler for p in self.peliculas), 2)
 
+    def to_dict(self) -> dict:
+        return {
+            "codigo": self.codigo,
+            "socio_codigo": self.socio.codigo,
+            "peliculas_codigos": [p.codigo for p in self.peliculas],
+            "fecha_recogida": self.fecha_recogida.strftime("%d/%m/%Y"),
+            "fecha_devolucion": self.fecha_devolucion.strftime("%d/%m/%Y"),
+        }
+
     def __str__(self) -> str:
         titulos = ", ".join(f"{p.nombre} (PEL-{p.codigo})" for p in self.peliculas)
         return (f"[ALQ-{self.codigo}] Socio: {self.socio.nombre} | "
@@ -180,9 +240,15 @@ class EstadisticaSocio:
     _contador = 1
 
     def __init__(self, socio: Socio, mes: int, anio: int,
-                 fecha_creacion: datetime, total_gastado: float):
-        self.__codigo = EstadisticaSocio._contador
-        EstadisticaSocio._contador += 1
+                 fecha_creacion: datetime, total_gastado: float,
+                 codigo: Optional[int] = None):
+        if codigo is None:
+            self.__codigo = EstadisticaSocio._contador
+            EstadisticaSocio._contador += 1
+        else:
+            self.__codigo = codigo
+            EstadisticaSocio._contador = max(EstadisticaSocio._contador, codigo + 1)
+
         self.socio = socio
         self.mes = mes
         self.anio = anio
@@ -203,6 +269,16 @@ class EstadisticaSocio:
     def total_gastado(self) -> float:
         return self.__total_gastado
 
+    def to_dict(self) -> dict:
+        return {
+            "codigo": self.codigo,
+            "socio_codigo": self.socio.codigo,
+            "mes": self.mes,
+            "anio": self.anio,
+            "fecha_creacion": self.fecha_creacion.strftime("%d/%m/%Y"),
+            "total_gastado": self.total_gastado,
+        }
+
     def __str__(self) -> str:
         return (f"[EST-{self.codigo}] Socio: {self.socio.nombre} (SOC-{self.socio.codigo}) | "
                 f"Periodo: {self.mes:02d}/{self.anio} | "
@@ -213,14 +289,25 @@ class EstadisticaSocio:
 class Administrador:
     _contador = 1
 
-    def __init__(self, nombre: str):
-        self.__codigo = Administrador._contador
-        Administrador._contador += 1
+    def __init__(self, nombre: str, codigo: Optional[int] = None):
+        if codigo is None:
+            self.__codigo = Administrador._contador
+            Administrador._contador += 1
+        else:
+            self.__codigo = codigo
+            Administrador._contador = max(Administrador._contador, codigo + 1)
+
         self.nombre = nombre
 
     @property
     def codigo(self) -> int:
         return self.__codigo
+
+    def to_dict(self) -> dict:
+        return {
+            "codigo": self.codigo,
+            "nombre": self.nombre,
+        }
 
     def __str__(self) -> str:
         return f"[ADM-{self.codigo}] {self.nombre}"
@@ -231,13 +318,116 @@ class Administrador:
 # ==========================================
 
 class SistemaAPPV:
-    def __init__(self):
+    def __init__(self, archivo_datos: str = "datos_appv.json"):
+        self.archivo = Path(archivo_datos)
         self.videoclubs: List[Videoclub] = []
         self.peliculas: List[Pelicula] = []
         self.socios: List[Socio] = []
         self.alquileres: List[Alquiler] = []
         self.estadisticas: List[EstadisticaSocio] = []
         self.administradores: List[Administrador] = []
+        self.cargar_datos()
+
+    # --- Persistencia en JSON ---
+    def guardar_datos(self) -> None:
+        datos = {
+            "videoclubs": [v.to_dict() for v in self.videoclubs],
+            "peliculas": [p.to_dict() for p in self.peliculas],
+            "socios": [s.to_dict() for s in self.socios],
+            "alquileres": [a.to_dict() for a in self.alquileres],
+            "administradores": [ad.to_dict() for ad in self.administradores],
+            "estadisticas": [e.to_dict() for e in self.estadisticas],
+        }
+        try:
+            with self.archivo.open("w", encoding="utf-8") as f:
+                json.dump(datos, f, ensure_ascii=False, indent=4)
+        except OSError as e:
+            print(f"⚠️ Error al guardar los datos en disco: {e}")
+
+    def cargar_datos(self) -> None:
+        if not self.archivo.exists():
+            return
+
+        try:
+            with self.archivo.open("r", encoding="utf-8") as f:
+                datos = json.load(f)
+
+            for item in datos.get("videoclubs", []):
+                self.videoclubs.append(
+                    Videoclub(
+                        gerente=item["gerente"],
+                        ciudad=item["ciudad"],
+                        calle=item["calle"],
+                        codigo_postal=item["codigo_postal"],
+                        codigo=item["codigo"],
+                    )
+                )
+
+            for item in datos.get("peliculas", []):
+                vc = self.buscar_videoclub(item["videoclub_codigo"])
+                if vc:
+                    self.peliculas.append(
+                        Pelicula(
+                            nombre=item["nombre"],
+                            fecha_estreno=datetime.strptime(item["fecha_estreno"], "%d/%m/%Y"),
+                            precio_alquiler=item["precio_alquiler"],
+                            videoclub=vc,
+                            director=item.get("director"),
+                            codigo=item["codigo"],
+                        )
+                    )
+
+            for item in datos.get("socios", []):
+                self.socios.append(
+                    Socio(
+                        nombre=item["nombre"],
+                        edad=item["edad"],
+                        codigo=item["codigo"],
+                    )
+                )
+
+            for item in datos.get("alquileres", []):
+                socio = self.buscar_socio(item["socio_codigo"])
+                peliculas_alq = [
+                    p for cod in item.get("peliculas_codigos", [])
+                    if (p := self.buscar_pelicula(cod)) is not None
+                ]
+                if socio and peliculas_alq:
+                    self.alquileres.append(
+                        Alquiler(
+                            socio=socio,
+                            peliculas=peliculas_alq,
+                            fecha_recogida=datetime.strptime(item["fecha_recogida"], "%d/%m/%Y"),
+                            fecha_devolucion=datetime.strptime(item["fecha_devolucion"], "%d/%m/%Y"),
+                            codigo=item["codigo"],
+                        )
+                    )
+
+            for item in datos.get("administradores", []):
+                self.administradores.append(
+                    Administrador(
+                        nombre=item["nombre"],
+                        codigo=item["codigo"],
+                    )
+                )
+
+            for item in datos.get("estadisticas", []):
+                socio = self.buscar_socio(item["socio_codigo"])
+                if socio:
+                    self.estadisticas.append(
+                        EstadisticaSocio(
+                            socio=socio,
+                            mes=item["mes"],
+                            anio=item["anio"],
+                            fecha_creacion=datetime.strptime(item["fecha_creacion"], "%d/%m/%Y"),
+                            total_gastado=item["total_gastado"],
+                            codigo=item["codigo"],
+                        )
+                    )
+
+            print(f"💾 Datos cargados correctamente desde '{self.archivo}'.")
+        except (json.JSONDecodeError, KeyError, ValueError, OSError) as e:
+            print(f"⚠️ No se pudieron cargar los datos previos ({e}). Se inicia un estado vacío.")
 
     # --- Búsquedas auxiliares ---
     def buscar_videoclub(self, codigo: int) -> Optional[Videoclub]:
@@ -264,7 +454,8 @@ class SistemaAPPV:
         cp = leer_texto("Código postal (5 caracteres): ", obligatorio=True, longitud_exacta=5)
         vc = Videoclub(gerente, ciudad, calle, cp)
         self.videoclubs.append(vc)
-        print(f"✅ Videoclub creado: {vc}")
+        self.guardar_datos()
+        print(f"✅ Videoclub creado y guardado: {vc}")
 
     def editar_videoclub(self):
         if not self.videoclubs:
@@ -290,6 +481,7 @@ class SistemaAPPV:
             vc.calle = nueva_calle
         if nuevo_cp:
             vc.codigo_postal = nuevo_cp
+        self.guardar_datos()
         print(f"✅ Videoclub actualizado: {vc}")
 
     # --- 2. Gestión de Películas ---
@@ -312,7 +504,8 @@ class SistemaAPPV:
 
         pelicula = Pelicula(nombre, estreno, precio, vc, director)
         self.peliculas.append(pelicula)
-        print(f"✅ Película creada: {pelicula}")
+        self.guardar_datos()
+        print(f"✅ Película creada y guardada: {pelicula}")
 
     def editar_pelicula(self):
         if not self.peliculas:
@@ -337,6 +530,7 @@ class SistemaAPPV:
             pel.nombre = nuevo_nombre
         if nuevo_dir:
             pel.director = nuevo_dir
+        self.guardar_datos()
         print(f"✅ Película actualizada: {pel}")
 
     # --- 3. Gestión de Socios ---
@@ -346,6 +540,7 @@ class SistemaAPPV:
         edad = leer_entero("Edad: ", minimo=1)
         socio = Socio(nombre, edad)
         self.socios.append(socio)
+        self.guardar_datos()
         print(f"✅ Socio registrado (válido en toda la cadena APPV): {socio}")
 
     def editar_socio(self):
@@ -363,6 +558,7 @@ class SistemaAPPV:
             socio.edad = leer_entero("Nueva edad: ", minimo=1)
         if nuevo_nombre:
             socio.nombre = nuevo_nombre
+        self.guardar_datos()
         print(f"✅ Socio actualizado: {socio}")
 
     # --- 4. Gestión de Alquileres ---
@@ -406,7 +602,8 @@ class SistemaAPPV:
 
         alquiler = Alquiler(socio, seleccionadas, fecha_recogida, fecha_devolucion)
         self.alquileres.append(alquiler)
-        print(f"✅ Alquiler registrado correctamente:\n{alquiler}")
+        self.guardar_datos()
+        print(f"✅ Alquiler registrado y guardado:\n{alquiler}")
 
     def editar_fecha_devolucion_alquiler(self):
         if not self.alquileres:
@@ -425,6 +622,7 @@ class SistemaAPPV:
         nueva_devolucion = leer_fecha("Introduce la nueva fecha de devolución")
 
         if alq.actualizar_fecha_devolucion(nueva_devolucion, fecha_actual):
+            self.guardar_datos()
             print(f"✅ Fecha de devolución actualizada:\n{alq}")
         else:
             print("❌ Error: La nueva fecha de devolución debe ser estrictamente posterior a la fecha actual.")
@@ -435,6 +633,7 @@ class SistemaAPPV:
         nombre = leer_texto("Nombre del administrador: ")
         admin = Administrador(nombre)
         self.administradores.append(admin)
+        self.guardar_datos()
         print(f"✅ Administrador creado: {admin}")
 
     def editar_administrador(self):
@@ -450,6 +649,7 @@ class SistemaAPPV:
         nuevo_nombre = leer_texto(f"Nombre ({admin.nombre}): ", obligatorio=False)
         if nuevo_nombre:
             admin.nombre = nuevo_nombre
+        self.guardar_datos()
         print(f"✅ Administrador actualizado: {admin}")
 
     def generar_estadistica_mensual(self):
@@ -499,7 +699,8 @@ class SistemaAPPV:
 
         est = EstadisticaSocio(socio, mes, anio, fecha_creacion, total_gastado)
         self.estadisticas.append(est)
-        print(f"✅ Estadística generada por {admin.nombre}:\n{est}")
+        self.guardar_datos()
+        print(f"✅ Estadística generada y guardada por {admin.nombre}:\n{est}")
 
 
 # ==========================================

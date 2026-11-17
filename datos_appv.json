@@ -1,0 +1,16 @@
+{
+    "videoclubs": [
+        {
+            "codigo": 1,
+            "gerente": "Pablo",
+            "ciudad": "Madrid",
+            "calle": "Paseo de la Patata",
+            "codigo_postal": "21919"
+        }
+    ],
+    "peliculas": [],
+    "socios": [],
+    "alquileres": [],
+    "administradores": [],
+    "estadisticas": []
+}
